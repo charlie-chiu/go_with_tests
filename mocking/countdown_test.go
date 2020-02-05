@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"reflect"
 	"testing"
+	"time"
 )
 
 // this spy struct implements both io.Writer and Sleeper
@@ -63,4 +64,24 @@ func TestCountdown(t *testing.T) {
 			t.Errorf("wanted calls %v got %v", want, got)
 		}
 	})
+}
+
+type SpyTime struct {
+	durationSlept time.Duration
+}
+
+func (s *SpyTime) Sleep(d time.Duration) {
+	s.durationSlept = d
+}
+
+func TestConfigurableSleeper(t *testing.T) {
+	sleepTime := 5 * time.Second
+
+	spyTime := &SpyTime{}
+	sleeper := ConfigurableSleeper{sleepTime, spyTime.Sleep}
+	sleeper.Sleep()
+
+	if spyTime.durationSlept != sleepTime {
+		t.Errorf("should have slept fot %v but slept for %v", sleepTime, spyTime.durationSlept)
+	}
 }
