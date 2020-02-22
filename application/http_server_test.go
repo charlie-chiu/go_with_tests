@@ -20,6 +20,18 @@ func (s *StubPlayerStore) RecordWin(name string) {
 	s.winCalls = append(s.winCalls, name)
 }
 
+type InMemoryPlayerStore struct {
+	store map[string]int
+}
+
+func (i *InMemoryPlayerStore) GetPlayerScore(name string) int {
+	return i.store[name]
+}
+
+func (i *InMemoryPlayerStore) RecordWin(name string) {
+	i.store[name]++
+}
+
 func TestGETPlayers(t *testing.T) {
 	store := StubPlayerStore{score: map[string]int{
 		"Pepper": 20,
@@ -65,8 +77,9 @@ func TestPOST(t *testing.T) {
 	}
 	server := &PlayerServer{&store}
 
-	t.Run("return accepted and record on POST", func(t *testing.T) {
-		request := newPostWinRequest("Pepper")
+	t.Run("record win player on POST", func(t *testing.T) {
+		player := "Pepper"
+		request := newPostWinRequest(player)
 		response := httptest.NewRecorder()
 
 		server.ServeHTTP(response, request)
@@ -76,7 +89,27 @@ func TestPOST(t *testing.T) {
 		if len(store.winCalls) != 1 {
 			t.Errorf("got %d calls to RecordWin want %d", len(store.winCalls), 1)
 		}
+
+		if store.winCalls[0] != player {
+			t.Errorf("did not store correct winner, got %q want %q", store.winCalls[0], player)
+		}
 	})
+}
+
+func TestRecordingWinsAndRetrievingThem(t *testing.T) {
+	store := InMemoryPlayerStore{store: map[string]int{}}
+	server := PlayerServer{&store}
+	player := "charlie"
+
+	server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
+	server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
+	server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
+
+	response := httptest.NewRecorder()
+	server.ServeHTTP(response, newGetScoreRequest(player))
+	assertStatus(t, response.Code, http.StatusOK)
+
+	assertResponseBody(t, response.Body.String(), "3")
 }
 
 func newPostWinRequest(player string) *http.Request {

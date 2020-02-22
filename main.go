@@ -6,17 +6,21 @@ import (
 	"net/http"
 )
 
-type InMemoryPlayerStore struct{}
-
-func (i *InMemoryPlayerStore) RecordWin(name string) {}
+type InMemoryPlayerStore struct {
+	store map[string]int
+}
 
 func (i *InMemoryPlayerStore) GetPlayerScore(name string) int {
-	return 123345345
+	return i.store[name]
+}
+
+func (i *InMemoryPlayerStore) RecordWin(name string) {
+	i.store[name]++
 }
 
 func main() {
 	handler := &application.PlayerServer{
-		&InMemoryPlayerStore{},
+		&InMemoryPlayerStore{store: map[string]int{}},
 	}
 
 	if err := http.ListenAndServe(":8080", handler); err != nil {
