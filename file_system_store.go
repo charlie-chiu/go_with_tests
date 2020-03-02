@@ -5,22 +5,23 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"os"
 )
 
-func NewFileSystemPlayerStore(db io.ReadWriteSeeker) *FileSystemPlayerStore {
+func NewFileSystemPlayerStore(db *os.File) *FileSystemPlayerStore {
 	db.Seek(0, 0)
 	league, err := NewLeague(db)
 	if err != nil {
 		log.Fatalf("new league failed, %v", err)
 	}
 	return &FileSystemPlayerStore{
-		database: db,
+		database: &tape{db},
 		league:   league,
 	}
 }
 
 type FileSystemPlayerStore struct {
-	database io.ReadWriteSeeker
+	database io.Writer
 	league   League
 }
 
@@ -42,7 +43,6 @@ func (f *FileSystemPlayerStore) RecordWin(name string) {
 		f.league = append(f.league, Player{name, 1})
 	}
 
-	f.database.Seek(0, 0)
 	json.NewEncoder(f.database).Encode(f.league)
 }
 
