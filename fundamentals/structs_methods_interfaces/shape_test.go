@@ -17,7 +17,7 @@ func TestArea(t *testing.T) {
 		}
 	}
 
-	t.Run("rectangles", func (t *testing.T){
+	t.Run("rectangles", func(t *testing.T) {
 		rectangle := Rectangle{
 			Width:  12.0,
 			Height: 6.0,
@@ -25,8 +25,8 @@ func TestArea(t *testing.T) {
 		checkArea(t, rectangle, 72.0)
 	})
 
-	t.Run("circles", func (t *testing.T){
-		c := Circle{Radius:10}
+	t.Run("circles", func(t *testing.T) {
+		c := Circle{Radius: 10}
 
 		checkArea(t, c, 314.1592653589793)
 	})
@@ -35,8 +35,8 @@ func TestArea(t *testing.T) {
 
 func TestAreaWithTable(t *testing.T) {
 	//TableDrivenTests
-	areaTests := []struct{
-		name string
+	areaTests := []struct {
+		name  string
 		shape Shape
 		want  float64
 	}{
@@ -46,7 +46,7 @@ func TestAreaWithTable(t *testing.T) {
 	}
 
 	for _, tt := range areaTests {
-		t.Run(tt.name, func(t *testing.T){
+		t.Run(tt.name, func(t *testing.T) {
 			got := tt.shape.Area()
 			if got != tt.want {
 				// can output with chinese
@@ -58,8 +58,8 @@ func TestAreaWithTable(t *testing.T) {
 
 func TestPerimeter(t *testing.T) {
 	//TableDrivenTests
-	areaTests := []struct{
-		name string
+	areaTests := []struct {
+		name  string
 		shape Shape
 		want  float64
 	}{
@@ -70,7 +70,7 @@ func TestPerimeter(t *testing.T) {
 	}
 
 	for _, tt := range areaTests {
-		t.Run(tt.name, func(t *testing.T){
+		t.Run(tt.name, func(t *testing.T) {
 			got := tt.shape.Perimeter()
 			if got != tt.want {
 				t.Errorf("got %g, want %g", got, tt.want)
