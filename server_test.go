@@ -96,9 +96,10 @@ func TestRecordingWinsAndRetrievingThem(t *testing.T) {
 	// run test by using FileSystemPlayerStore
 	database, cleanDB := createTempFile(t, "[]")
 	defer cleanDB()
-	store := FileSystemPlayerStore{database}
+	//store := FileSystemPlayerStore{database}
+	store := NewFileSystemPlayerStore(database)
 
-	server := NewPlayerServer(&store)
+	server := NewPlayerServer(store)
 	player := "charlie"
 
 	server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
