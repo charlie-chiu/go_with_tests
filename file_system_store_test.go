@@ -21,8 +21,8 @@ func TestFileSystemStore(t *testing.T) {
 		got := store.GetLeague()
 
 		want := []Player{
-			{"Cleo", 10},
 			{"Charlie", 999},
+			{"Cleo", 10},
 		}
 		assertLeague(t, got, want)
 
@@ -86,6 +86,20 @@ func TestFileSystemStore(t *testing.T) {
 		_, err := NewFileSystemPlayerStore(database)
 
 		assertNoError(t, err)
+	})
+	t.Run("league sorted from highest to lowest", func(t *testing.T) {
+		file, cleanDatabase := createTempFile(t, `[
+		{"Name": "Cleo", "Wins": 10},	
+		{"Name": "Charlie", "Wins": 999}]`)
+		defer cleanDatabase()
+		store, _ := NewFileSystemPlayerStore(file)
+		got := store.GetLeague()
+		want := League{
+			{"Charlie", 999},
+			{"Cleo", 10},
+		}
+
+		assertLeague(t, got, want)
 	})
 
 }
