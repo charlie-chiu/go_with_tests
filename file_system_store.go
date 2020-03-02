@@ -15,13 +15,13 @@ func NewFileSystemPlayerStore(db *os.File) *FileSystemPlayerStore {
 		log.Fatalf("new league failed, %v", err)
 	}
 	return &FileSystemPlayerStore{
-		database: &tape{db},
+		database: json.NewEncoder(&tape{db}),
 		league:   league,
 	}
 }
 
 type FileSystemPlayerStore struct {
-	database io.Writer
+	database *json.Encoder
 	league   League
 }
 
@@ -43,7 +43,7 @@ func (f *FileSystemPlayerStore) RecordWin(name string) {
 		f.league = append(f.league, Player{name, 1})
 	}
 
-	json.NewEncoder(f.database).Encode(f.league)
+	f.database.Encode(f.league)
 }
 
 func (f *FileSystemPlayerStore) GetLeague() League {
