@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -97,7 +98,10 @@ func TestRecordingWinsAndRetrievingThem(t *testing.T) {
 	database, cleanDB := createTempFile(t, "[]")
 	defer cleanDB()
 	//store := FileSystemPlayerStore{database}
-	store := NewFileSystemPlayerStore(database)
+	store, err := NewFileSystemPlayerStore(database)
+	if err != nil {
+		log.Fatalf("problem creating file system player store, %v", err)
+	}
 
 	server := NewPlayerServer(store)
 	player := "charlie"

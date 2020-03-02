@@ -2,6 +2,7 @@ package main
 
 import (
 	"io/ioutil"
+	"log"
 	"os"
 	"testing"
 )
@@ -13,8 +14,10 @@ func TestFileSystemStore(t *testing.T) {
 		{"Name": "Charlie", "Wins": 999}]`)
 		defer cleanDatabase()
 
-		store := NewFileSystemPlayerStore(database)
-
+		store, err := NewFileSystemPlayerStore(database)
+		if err != nil {
+			log.Fatalf("problem creating file system player store, %v", err)
+		}
 		got := store.GetLeague()
 
 		want := []Player{
@@ -33,8 +36,10 @@ func TestFileSystemStore(t *testing.T) {
 		{"Name": "Charlie", "Wins": 999}]`)
 		defer cleanDatabase()
 
-		store := NewFileSystemPlayerStore(database)
-
+		store, err := NewFileSystemPlayerStore(database)
+		if err != nil {
+			log.Fatalf("problem creating file system player store, %v", err)
+		}
 		got := store.GetPlayerScore("Charlie")
 		want := 999
 
@@ -46,7 +51,10 @@ func TestFileSystemStore(t *testing.T) {
 		{"Name": "Charlie", "Wins": 999}]`)
 		defer cleanDatabase()
 
-		store := NewFileSystemPlayerStore(database)
+		store, err := NewFileSystemPlayerStore(database)
+		if err != nil {
+			log.Fatalf("problem creating file system player store, %v", err)
+		}
 
 		store.RecordWin("Cleo")
 
@@ -60,7 +68,10 @@ func TestFileSystemStore(t *testing.T) {
 		{"Name": "Charlie", "Wins": 999}]`)
 		defer cleanDatabase()
 
-		store := NewFileSystemPlayerStore(database)
+		store, err := NewFileSystemPlayerStore(database)
+		if err != nil {
+			log.Fatalf("problem creating file system player store, %v", err)
+		}
 
 		store.RecordWin("Frog")
 
@@ -68,7 +79,21 @@ func TestFileSystemStore(t *testing.T) {
 		want := 1
 		assertScoreEquals(t, got, want)
 	})
+	t.Run("works with an empty file", func(t *testing.T) {
+		database, cleanDatabase := createTempFile(t, "")
+		defer cleanDatabase()
 
+		_, err := NewFileSystemPlayerStore(database)
+
+		assertNoError(t, err)
+	})
+
+}
+
+func assertNoError(t *testing.T, err error) {
+	if err != nil {
+		t.Errorf("didn't expect an error but got one, %v", err)
+	}
 }
 
 func assertScoreEquals(t *testing.T, got, want int) {

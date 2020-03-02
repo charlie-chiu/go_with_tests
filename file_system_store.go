@@ -4,20 +4,32 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"os"
 )
 
-func NewFileSystemPlayerStore(db *os.File) *FileSystemPlayerStore {
-	db.Seek(0, 0)
-	league, err := NewLeague(db)
+func NewFileSystemPlayerStore(file *os.File) (*FileSystemPlayerStore, error) {
+	file.Seek(0, 0)
+
+	info, err := file.Stat()
 	if err != nil {
-		log.Fatalf("new league failed, %v", err)
+		return nil, fmt.Errorf("problem getting file info from file %s, %v", file.Name(), err)
 	}
+
+	if info.Size() == 0 {
+		file.Write([]byte("[]"))
+		file.Seek(0, 0)
+	}
+
+	league, err := NewLeague(file)
+
+	if err != nil {
+		return nil, fmt.Errorf("problem loading player store from file %s, %v", file.Name(), err)
+	}
+
 	return &FileSystemPlayerStore{
-		database: json.NewEncoder(&tape{db}),
+		database: json.NewEncoder(&tape{file}),
 		league:   league,
-	}
+	}, nil
 }
 
 type FileSystemPlayerStore struct {
