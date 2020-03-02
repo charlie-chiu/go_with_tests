@@ -12,7 +12,7 @@ import (
 type StubPlayerStore struct {
 	score    map[string]int
 	winCalls []string
-	league   []Player
+	league   League
 }
 
 func (s *StubPlayerStore) GetPlayerScore(name string) int {
@@ -23,7 +23,7 @@ func (s *StubPlayerStore) RecordWin(name string) {
 	s.winCalls = append(s.winCalls, name)
 }
 
-func (s *StubPlayerStore) GetLeague() []Player {
+func (s *StubPlayerStore) GetLeague() League {
 	return s.league
 }
 
@@ -91,7 +91,13 @@ func TestPOST(t *testing.T) {
 
 func TestRecordingWinsAndRetrievingThem(t *testing.T) {
 	// run integration test by using InMemoryPlayerStore instead of StubPlayerStore
-	store := InMemoryPlayerStore{store: map[string]int{}}
+	//store := InMemoryPlayerStore{store: map[string]int{}}
+
+	// run test by using FileSystemPlayerStore
+	database, cleanDB := createTempFile(t, "[]")
+	defer cleanDB()
+	store := FileSystemPlayerStore{database}
+
 	server := NewPlayerServer(&store)
 	player := "charlie"
 
@@ -121,7 +127,7 @@ func TestRecordingWinsAndRetrievingThem(t *testing.T) {
 
 func TestLeague(t *testing.T) {
 	t.Run("it returns the league table as JSON", func(t *testing.T) {
-		wantedLeague := []Player{
+		wantedLeague := League{
 			{"Cleo", 32},
 			{"Charlie", 20},
 			{"Toby", 14},
