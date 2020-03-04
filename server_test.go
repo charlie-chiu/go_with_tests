@@ -10,23 +10,23 @@ import (
 	"testing"
 )
 
-type StubPlayerStore struct {
-	score    map[string]int
-	winCalls []string
-	league   League
-}
-
-func (s *StubPlayerStore) GetPlayerScore(name string) int {
-	return s.score[name]
-}
-
-func (s *StubPlayerStore) RecordWin(name string) {
-	s.winCalls = append(s.winCalls, name)
-}
-
-func (s *StubPlayerStore) GetLeague() League {
-	return s.league
-}
+//type StubPlayerStore struct {
+//	score    map[string]int
+//	winCalls []string
+//	league   League
+//}
+//
+//func (s *StubPlayerStore) GetPlayerScore(name string) int {
+//	return s.score[name]
+//}
+//
+//func (s *StubPlayerStore) RecordWin(name string) {
+//	s.winCalls = append(s.winCalls, name)
+//}
+//
+//func (s *StubPlayerStore) GetLeague() League {
+//	return s.league
+//}
 
 func TestGETPlayers(t *testing.T) {
 	store := StubPlayerStore{score: map[string]int{
