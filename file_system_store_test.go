@@ -24,11 +24,11 @@ func TestFileSystemStore(t *testing.T) {
 			{"Charlie", 999},
 			{"Cleo", 10},
 		}
-		assertLeague(t, got, want)
+		AssertLeague(t, got, want)
 
 		//read again
 		got = store.GetLeague()
-		assertLeague(t, got, want)
+		AssertLeague(t, got, want)
 	})
 	t.Run("get player score", func(t *testing.T) {
 		database, cleanDatabase := createTempFile(t, `[
@@ -43,7 +43,7 @@ func TestFileSystemStore(t *testing.T) {
 		got := store.GetPlayerScore("Charlie")
 		want := 999
 
-		assertScoreEquals(t, got, want)
+		AssertScoreEquals(t, got, want)
 	})
 	t.Run("store wins for existing players", func(t *testing.T) {
 		database, cleanDatabase := createTempFile(t, `[
@@ -60,7 +60,7 @@ func TestFileSystemStore(t *testing.T) {
 
 		got := store.GetPlayerScore("Cleo")
 		want := 11
-		assertScoreEquals(t, got, want)
+		AssertScoreEquals(t, got, want)
 	})
 	t.Run("store wins for new players", func(t *testing.T) {
 		database, cleanDatabase := createTempFile(t, `[
@@ -77,7 +77,7 @@ func TestFileSystemStore(t *testing.T) {
 
 		got := store.GetPlayerScore("Frog")
 		want := 1
-		assertScoreEquals(t, got, want)
+		AssertScoreEquals(t, got, want)
 	})
 	t.Run("works with an empty file", func(t *testing.T) {
 		database, cleanDatabase := createTempFile(t, "")
@@ -85,7 +85,7 @@ func TestFileSystemStore(t *testing.T) {
 
 		_, err := NewFileSystemPlayerStore(database)
 
-		assertNoError(t, err)
+		AssertNoError(t, err)
 	})
 	t.Run("league sorted from highest to lowest", func(t *testing.T) {
 		file, cleanDatabase := createTempFile(t, `[
@@ -99,22 +99,9 @@ func TestFileSystemStore(t *testing.T) {
 			{"Cleo", 10},
 		}
 
-		assertLeague(t, got, want)
+		AssertLeague(t, got, want)
 	})
 
-}
-
-func assertNoError(t *testing.T, err error) {
-	if err != nil {
-		t.Errorf("didn't expect an error but got one, %v", err)
-	}
-}
-
-func assertScoreEquals(t *testing.T, got, want int) {
-	t.Helper()
-	if got != want {
-		t.Errorf("Got %d want %d", got, want)
-	}
 }
 
 func createTempFile(t *testing.T, initialData string) (*os.File, func()) {
