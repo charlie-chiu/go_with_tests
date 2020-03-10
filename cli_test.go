@@ -39,7 +39,7 @@ func TestCLI(t *testing.T) {
 		//arrange
 		in := strings.NewReader("7\nChris wins\n")
 		playerStore := &poker.StubPlayerStore{}
-		game := poker.NewGame(dummySpyAlerter, playerStore)
+		game := poker.NewTexasHoldem(dummySpyAlerter, playerStore)
 		cli := poker.NewCLI(in, dummyStdOut, game)
 
 		// act
@@ -53,7 +53,7 @@ func TestCLI(t *testing.T) {
 		//arrange
 		in := strings.NewReader("5\nCharlie wins\n")
 		playerStore := &poker.StubPlayerStore{}
-		game := poker.NewGame(dummySpyAlerter, playerStore)
+		game := poker.NewTexasHoldem(dummySpyAlerter, playerStore)
 		cli := poker.NewCLI(in, dummyStdOut, game)
 
 		// act
@@ -66,7 +66,7 @@ func TestCLI(t *testing.T) {
 	t.Run("it schedules printing of blind values", func(t *testing.T) {
 		playerStore := &poker.StubPlayerStore{}
 		blindAlerter := &SpyBlindAlerter{}
-		game := poker.NewGame(blindAlerter, playerStore)
+		game := poker.NewTexasHoldem(blindAlerter, playerStore)
 
 		in := strings.NewReader("5\n")
 		cli := poker.NewCLI(in, dummyStdOut, game)
@@ -103,7 +103,7 @@ func TestCLI(t *testing.T) {
 	t.Run("it prompts the user to enter the number of players", func(t *testing.T) {
 		blindAlerter := &SpyBlindAlerter{}
 		playerStore := &poker.StubPlayerStore{}
-		game := poker.NewGame(blindAlerter, playerStore)
+		game := poker.NewTexasHoldem(blindAlerter, playerStore)
 
 		stdOut := &bytes.Buffer{}
 		in := strings.NewReader("7\n")
@@ -141,7 +141,7 @@ func TestCLI(t *testing.T) {
 func TestGame_Start(t *testing.T) {
 	t.Run("schedules alerts on game start for 5 players", func(t *testing.T) {
 		blindAlerter := &SpyBlindAlerter{}
-		game := poker.NewGame(blindAlerter, dummyPlayerStore)
+		game := poker.NewTexasHoldem(blindAlerter, dummyPlayerStore)
 
 		game.Start(5)
 
@@ -174,7 +174,7 @@ func TestGame_Start(t *testing.T) {
 
 	t.Run("schedules alerts on game start for 7 players", func(t *testing.T) {
 		blindAlerter := &SpyBlindAlerter{}
-		game := poker.NewGame(blindAlerter, dummyPlayerStore)
+		game := poker.NewTexasHoldem(blindAlerter, dummyPlayerStore)
 
 		game.Start(7)
 
@@ -201,7 +201,7 @@ func TestGame_Start(t *testing.T) {
 func TestGame_Finish(t *testing.T) {
 	//arrange
 	store := &poker.StubPlayerStore{}
-	game := poker.NewGame(dummySpyAlerter, store)
+	game := poker.NewTexasHoldem(dummySpyAlerter, store)
 	winner := "Charlie"
 
 	// act

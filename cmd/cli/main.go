@@ -37,7 +37,7 @@ func main() {
 	fmt.Println("Type \"{Name} wins\" to record a win")
 
 	// just like HandlerFunc in http package
-	game := poker.NewGame(BlindAlerterFunc(StdOutAlerter), store)
+	game := poker.NewTexasHoldem(BlindAlerterFunc(StdOutAlerter), store)
 
 	cli := poker.NewCLI(os.Stdin, os.Stdout, game)
 	cli.PlayPoker()

@@ -6,23 +6,23 @@ import (
 	"io"
 	"strconv"
 	"strings"
-	"time"
 )
 
 const PlayerPrompt = "Please enter the number of players: "
 
-type BlindAlerter interface {
-	ScheduleAlertAt(duration time.Duration, amount int)
-}
-
 type CLI struct {
 	in   *bufio.Scanner
 	out  io.Writer
-	game *Game
+	game Game
+}
+
+type Game interface {
+	Start(numberOfPlayers int)
+	Finish(winner string)
 }
 
 //just like constructor in php?
-func NewCLI(in io.Reader, out io.Writer, game *Game) *CLI {
+func NewCLI(in io.Reader, out io.Writer, game Game) *CLI {
 	return &CLI{
 		in:   bufio.NewScanner(in),
 		out:  out,
