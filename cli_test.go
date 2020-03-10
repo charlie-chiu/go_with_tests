@@ -39,7 +39,8 @@ func TestCLI(t *testing.T) {
 		//arrange
 		in := strings.NewReader("7\nChris wins\n")
 		playerStore := &poker.StubPlayerStore{}
-		cli := poker.NewCLI(playerStore, in, dummyStdOut, dummySpyAlerter)
+		game := poker.NewGame(dummySpyAlerter, playerStore)
+		cli := poker.NewCLI(in, dummyStdOut, game)
 
 		// act
 		cli.PlayPoker()
@@ -52,7 +53,8 @@ func TestCLI(t *testing.T) {
 		//arrange
 		in := strings.NewReader("5\nCharlie wins\n")
 		playerStore := &poker.StubPlayerStore{}
-		cli := poker.NewCLI(playerStore, in, dummyStdOut, dummySpyAlerter)
+		game := poker.NewGame(dummySpyAlerter, playerStore)
+		cli := poker.NewCLI(in, dummyStdOut, game)
 
 		// act
 		cli.PlayPoker()
@@ -62,11 +64,13 @@ func TestCLI(t *testing.T) {
 	})
 
 	t.Run("it schedules printing of blind values", func(t *testing.T) {
-		in := strings.NewReader("5\n")
 		playerStore := &poker.StubPlayerStore{}
 		blindAlerter := &SpyBlindAlerter{}
+		game := poker.NewGame(blindAlerter, playerStore)
 
-		cli := poker.NewCLI(playerStore, in, dummyStdOut, blindAlerter)
+		in := strings.NewReader("5\n")
+		cli := poker.NewCLI(in, dummyStdOut, game)
+
 		cli.PlayPoker()
 
 		cases := []scheduledAlert{
@@ -97,11 +101,14 @@ func TestCLI(t *testing.T) {
 	})
 
 	t.Run("it prompts the user to enter the number of players", func(t *testing.T) {
+		blindAlerter := &SpyBlindAlerter{}
+		playerStore := &poker.StubPlayerStore{}
+		game := poker.NewGame(blindAlerter, playerStore)
+
 		stdOut := &bytes.Buffer{}
 		in := strings.NewReader("7\n")
-		blindAlerter := &SpyBlindAlerter{}
+		cli := poker.NewCLI(in, stdOut, game)
 
-		cli := poker.NewCLI(dummyPlayerStore, in, stdOut, blindAlerter)
 		cli.PlayPoker()
 
 		got := stdOut.String()
