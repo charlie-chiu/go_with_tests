@@ -2,10 +2,13 @@ package poker
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"strings"
 	"time"
 )
+
+const PlayerPrompt = "Please enter the number of players: "
 
 type BlindAlerter interface {
 	ScheduleAlertAt(duration time.Duration, amount int)
@@ -14,14 +17,16 @@ type BlindAlerter interface {
 type CLI struct {
 	store   PlayerStore
 	in      *bufio.Scanner
+	out     io.Writer
 	alerter BlindAlerter
 }
 
 //just like constructor in php?
-func NewCLI(store PlayerStore, in io.Reader, alerter BlindAlerter) *CLI {
+func NewCLI(store PlayerStore, in io.Reader, out io.Writer, alerter BlindAlerter) *CLI {
 	return &CLI{
 		store:   store,
 		in:      bufio.NewScanner(in),
+		out:     out,
 		alerter: alerter,
 	}
 }
@@ -29,6 +34,7 @@ func NewCLI(store PlayerStore, in io.Reader, alerter BlindAlerter) *CLI {
 func (cli *CLI) PlayPoker() {
 	cli.scheduleBlindAlerts()
 	userInput := cli.readLine()
+	fmt.Fprint(cli.out, PlayerPrompt)
 	cli.store.RecordWin(extractWinner(userInput))
 }
 
