@@ -2,19 +2,70 @@ package poker
 
 import (
 	"fmt"
+	"github.com/gorilla/websocket"
 	"io"
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
+	"time"
 )
+
+func TestGetGame(t *testing.T) {
+	t.Run("GET /game return 200", func(t *testing.T) {
+		server := mustMakePlayerServer(t, &StubPlayerStore{})
+
+		request := newGameRequest()
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		AssertStatus(t, response.Code, http.StatusOK)
+	})
+
+	t.Run("when get a message over a websocket it is winner of a game", func(t *testing.T) {
+		store := &StubPlayerStore{}
+		winner := "Ruth"
+		playerServer := mustMakePlayerServer(t, store)
+		server := httptest.NewServer(playerServer)
+
+		wsURL := "ws" + strings.TrimPrefix(server.URL, "http") + "/ws"
+
+		ws := mustDialWS(t, wsURL)
+		defer ws.Close()
+
+		writeWSMessage(t, ws, winner)
+
+		time.Sleep(time.Millisecond * 10)
+
+		AssertPlayerWin(t, store, winner)
+	})
+}
+
+func writeWSMessage(t *testing.T, conn *websocket.Conn, message string) {
+	t.Helper()
+	err := conn.WriteMessage(websocket.TextMessage, []byte(message))
+	if err != nil {
+		t.Fatalf("could not send message over ws connetcion %v", err)
+	}
+}
+
+func mustDialWS(t *testing.T, url string) *websocket.Conn {
+	t.Helper()
+	ws, _, err := websocket.DefaultDialer.Dial(url, nil)
+	if err != nil {
+		t.Fatalf("could not open a ws connection on %s %v", url, err)
+	}
+	return ws
+}
 
 func TestGETPlayers(t *testing.T) {
 	store := StubPlayerStore{score: map[string]int{
 		"Pepper": 20,
 		"Floyd":  10,
 	}}
-	server := NewPlayerServer(&store)
+	server := mustMakePlayerServer(t, &store)
 
 	t.Run("returns Pepper's score", func(t *testing.T) {
 		request := newGetScoreRequest("Pepper")
@@ -50,7 +101,7 @@ func TestPOST(t *testing.T) {
 	store := StubPlayerStore{
 		score: map[string]int{},
 	}
-	server := NewPlayerServer(&store)
+	server := mustMakePlayerServer(t, &store)
 
 	t.Run("record win player on POST", func(t *testing.T) {
 		player := "Pepper"
@@ -84,7 +135,7 @@ func TestRecordingWinsAndRetrievingThem(t *testing.T) {
 		log.Fatalf("problem creating file system player store, %v", err)
 	}
 
-	server := NewPlayerServer(store)
+	server := mustMakePlayerServer(t, store)
 	player := "charlie"
 
 	server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
@@ -119,7 +170,7 @@ func TestLeague(t *testing.T) {
 			{"Toby", 14},
 		}
 		store := StubPlayerStore{nil, nil, wantedLeague}
-		server := NewPlayerServer(&store)
+		server := mustMakePlayerServer(t, &store)
 
 		request := newLeagueRequest()
 		response := httptest.NewRecorder()
@@ -158,4 +209,17 @@ func newGetScoreRequest(player string) *http.Request {
 	r, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/players/%s", player), nil)
 
 	return r
+}
+
+func newGameRequest() *http.Request {
+	request, _ := http.NewRequest(http.MethodGet, "/game", nil)
+	return request
+}
+
+func mustMakePlayerServer(t *testing.T, store PlayerStore) *PlayerServer {
+	server, err := NewPlayerServer(store)
+	if err != nil {
+		t.Fatalf("problem creating player server %v", err)
+	}
+	return server
 }

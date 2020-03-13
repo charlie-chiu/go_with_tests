@@ -3,13 +3,20 @@ package poker
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gorilla/websocket"
 	"net/http"
+	"text/template"
 )
 
 type PlayerStore interface {
 	GetPlayerScore(name string) int
 	RecordWin(name string)
 	GetLeague() League
+}
+
+var wsUpgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
 }
 
 type Player struct {
@@ -22,20 +29,42 @@ type PlayerServer struct {
 	// THIS IS embedding!
 	// PlayerServer now has all methods that http.Handler had.
 	http.Handler
+
+	template *template.Template
 }
 
-func NewPlayerServer(store PlayerStore) *PlayerServer {
+const htmlTemplatePath = "game.html"
+
+func NewPlayerServer(store PlayerStore) (*PlayerServer, error) {
 	p := new(PlayerServer)
 
+	tmpl, err := template.ParseFiles(htmlTemplatePath)
+	if err != nil {
+		return nil, fmt.Errorf("problem opening %s %v", htmlTemplatePath, err)
+	}
+
 	p.store = store
+	p.template = tmpl
 
 	router := http.NewServeMux()
+	router.Handle("/ws", http.HandlerFunc(p.webSocket))
+	router.Handle("/game", http.HandlerFunc(p.gameHandler))
 	router.Handle("/league", http.HandlerFunc(p.leagueHandler))
 	router.Handle("/players/", http.HandlerFunc(p.playersHandler))
 
 	p.Handler = router
 
-	return p
+	return p, nil
+}
+
+func (p *PlayerServer) webSocket(w http.ResponseWriter, r *http.Request) {
+	conn, _ := wsUpgrader.Upgrade(w, r, nil)
+	_, winnerMsg, _ := conn.ReadMessage()
+	p.store.RecordWin(string(winnerMsg))
+}
+
+func (p *PlayerServer) gameHandler(w http.ResponseWriter, r *http.Request) {
+	p.template.Execute(w, nil)
 }
 
 func (p *PlayerServer) playersHandler(w http.ResponseWriter, r *http.Request) {
