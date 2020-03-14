@@ -36,27 +36,10 @@ func (s *SpyBlindAlerter) ScheduleAlertAt(duration time.Duration, amount int, to
 	})
 }
 
-type GameSpy struct {
-	StartedWith  int
-	FinishedWith string
-	StartCalled  bool
-	FinishCalled bool
-}
-
-func (g *GameSpy) Start(numberOfPlayers int, alertsDestination io.Writer) {
-	g.StartCalled = true
-	g.StartedWith = numberOfPlayers
-}
-
-func (g *GameSpy) Finish(winner string) {
-	g.FinishCalled = true
-	g.FinishedWith = winner
-}
-
 func TestCLI(t *testing.T) {
 	t.Run("it prompts the user to enter the number of players and start", func(t *testing.T) {
 
-		game := &GameSpy{}
+		game := &poker.GameSpy{}
 
 		stdOut := &bytes.Buffer{}
 		in := strings.NewReader("7\nsomeone wins")
@@ -77,7 +60,7 @@ func TestCLI(t *testing.T) {
 	t.Run("start game with 6 players and finish game with \"Chris\" as winner", func(t *testing.T) {
 		//arrange
 		in := strings.NewReader("6\nChris wins\n")
-		game := &GameSpy{}
+		game := &poker.GameSpy{}
 		cli := poker.NewCLI(in, dummyStdOut, game)
 
 		// act
@@ -89,7 +72,7 @@ func TestCLI(t *testing.T) {
 	})
 
 	t.Run("it prints an error when a non numeric value is entered and does not start the game", func(t *testing.T) {
-		g := &GameSpy{StartCalled: false}
+		g := &poker.GameSpy{StartCalled: false}
 		out := &bytes.Buffer{}
 		in := strings.NewReader("someString")
 
@@ -106,7 +89,7 @@ func TestCLI(t *testing.T) {
 	t.Run("it prints an error when entered a string not 'someone wins' and game should not finish", func(t *testing.T) {
 		stdOut := &bytes.Buffer{}
 		stdIn := strings.NewReader("1\nHello, Worlda\n")
-		game := &GameSpy{FinishCalled: false}
+		game := &poker.GameSpy{FinishCalled: false}
 		cli := poker.NewCLI(stdIn, stdOut, game)
 
 		cli.PlayPoker()
@@ -191,7 +174,7 @@ func TestGame_Finish(t *testing.T) {
 	poker.AssertPlayerWin(t, store, "Charlie")
 }
 
-func assertFinishCalledWith(t *testing.T, game *GameSpy, winner string) {
+func assertFinishCalledWith(t *testing.T, game *poker.GameSpy, winner string) {
 	t.Helper()
 	got := game.FinishedWith
 	if got != winner {
@@ -199,7 +182,7 @@ func assertFinishCalledWith(t *testing.T, game *GameSpy, winner string) {
 	}
 }
 
-func assertGameStartWith(t *testing.T, game *GameSpy, numberOfPlayer int) {
+func assertGameStartWith(t *testing.T, game *poker.GameSpy, numberOfPlayer int) {
 	t.Helper()
 	if game.StartedWith != numberOfPlayer {
 		t.Errorf("want Start Called with 6 but got %d", game.StartedWith)

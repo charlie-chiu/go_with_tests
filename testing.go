@@ -1,10 +1,27 @@
 package poker
 
 import (
+	"io"
 	"net/http/httptest"
 	"reflect"
 	"testing"
 )
+
+type GameSpy struct {
+	StartedWith  int
+	FinishedWith string
+	StartCalled  bool
+	FinishCalled bool
+}
+
+func (g *GameSpy) Start(numberOfPlayers int, alertsDestination io.Writer) {
+	g.StartCalled = true
+	g.StartedWith = numberOfPlayers
+}
+func (g *GameSpy) Finish(winner string) {
+	g.FinishCalled = true
+	g.FinishedWith = winner
+}
 
 type StubPlayerStore struct {
 	score    map[string]int
