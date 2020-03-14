@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	poker "github.com/charlie-chiu/go_with_test"
+	"io"
 	"log"
 	"os"
 	"time"
@@ -10,9 +11,9 @@ import (
 
 const dbFileName = "game.db.json"
 
-func StdOutAlerter(duration time.Duration, amount int) {
+func Alerter(duration time.Duration, amount int, to io.Writer) {
 	time.AfterFunc(duration, func() {
-		fmt.Fprintf(os.Stdout, "Blind is now %d\n", amount)
+		fmt.Fprintf(to, "Blind is now %d\n", amount)
 	})
 }
 
@@ -27,7 +28,7 @@ func main() {
 	fmt.Println("Type \"{Name} wins\" to record a win")
 
 	// just like HandlerFunc in http package
-	game := poker.NewTexasHoldem(poker.BlindAlerterFunc(StdOutAlerter), store)
+	game := poker.NewTexasHoldem(poker.BlindAlerterFunc(Alerter), store)
 
 	cli := poker.NewCLI(os.Stdin, os.Stdout, game)
 	cli.PlayPoker()

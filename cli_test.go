@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	poker "github.com/charlie-chiu/go_with_test"
+	"io"
+	"io/ioutil"
 	"strings"
 	"testing"
 	"time"
@@ -27,10 +29,10 @@ type SpyBlindAlerter struct {
 	alerts []scheduledAlert
 }
 
-func (s *SpyBlindAlerter) ScheduleAlertAt(duration time.Duration, blind int) {
+func (s *SpyBlindAlerter) ScheduleAlertAt(duration time.Duration, amount int, to io.Writer) {
 	s.alerts = append(s.alerts, scheduledAlert{
 		at:    duration,
-		blind: blind,
+		blind: amount,
 	})
 }
 
@@ -41,10 +43,11 @@ type GameSpy struct {
 	FinishCalled bool
 }
 
-func (g *GameSpy) Start(numberOfPlayers int) {
+func (g *GameSpy) Start(numberOfPlayers int, alertsDestination io.Writer) {
 	g.StartCalled = true
 	g.StartedWith = numberOfPlayers
 }
+
 func (g *GameSpy) Finish(winner string) {
 	g.FinishCalled = true
 	g.FinishedWith = winner
@@ -144,7 +147,7 @@ func TestGame_Start(t *testing.T) {
 		blindAlerter := &SpyBlindAlerter{}
 		game := poker.NewTexasHoldem(blindAlerter, dummyPlayerStore)
 
-		game.Start(5)
+		game.Start(5, ioutil.Discard)
 
 		cases := []scheduledAlert{
 			// 5 players, blind increase every 10 minutes
@@ -177,7 +180,7 @@ func TestGame_Start(t *testing.T) {
 		blindAlerter := &SpyBlindAlerter{}
 		game := poker.NewTexasHoldem(blindAlerter, dummyPlayerStore)
 
-		game.Start(7)
+		game.Start(7, ioutil.Discard)
 
 		cases := []scheduledAlert{
 			{0 * time.Second, 100},
