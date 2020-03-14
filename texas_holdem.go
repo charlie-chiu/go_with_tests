@@ -16,8 +16,8 @@ func NewTexasHoldem(a BlindAlerter, s PlayerStore) *TexasHoldem {
 }
 
 func (t *TexasHoldem) Start(numberOfPlayers int) {
-	//blindIncrement := time.Duration(5+numberOfPlayers) * time.Minute
-	blindIncrement := 5 * time.Second
+	blindIncrement := time.Duration(5+numberOfPlayers) * time.Minute
+	//blindIncrement := 5 * time.Second
 
 	blinds := []int{100, 200, 300, 400, 500, 600, 800, 1000, 2000, 4000, 8000}
 	blindTime := 0 * time.Second
