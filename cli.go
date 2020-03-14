@@ -18,11 +18,6 @@ type CLI struct {
 	game Game
 }
 
-type Game interface {
-	Start(numberOfPlayers int)
-	Finish(winner string)
-}
-
 //just like constructor in php?
 func NewCLI(in io.Reader, out io.Writer, game Game) *CLI {
 	return &CLI{

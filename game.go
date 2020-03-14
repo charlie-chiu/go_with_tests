@@ -2,8 +2,9 @@ package poker
 
 import "time"
 
-type BlindAlerter interface {
-	ScheduleAlertAt(duration time.Duration, amount int)
+type Game interface {
+	Start(numberOfPlayers int)
+	Finish(winner string)
 }
 
 type TexasHoldem struct {
@@ -11,6 +12,7 @@ type TexasHoldem struct {
 	store   PlayerStore
 }
 
+// constructor of TexasHoldem
 func NewTexasHoldem(a BlindAlerter, s PlayerStore) *TexasHoldem {
 	return &TexasHoldem{
 		alerter: a,

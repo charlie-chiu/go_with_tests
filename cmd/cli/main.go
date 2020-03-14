@@ -10,12 +10,6 @@ import (
 
 const dbFileName = "game.db.json"
 
-type BlindAlerterFunc func(duration time.Duration, amount int)
-
-func (a BlindAlerterFunc) ScheduleAlertAt(duration time.Duration, amount int) {
-	a(duration, amount)
-}
-
 func StdOutAlerter(duration time.Duration, amount int) {
 	time.AfterFunc(duration, func() {
 		fmt.Fprintf(os.Stdout, "Blind is now %d\n", amount)
@@ -33,7 +27,7 @@ func main() {
 	fmt.Println("Type \"{Name} wins\" to record a win")
 
 	// just like HandlerFunc in http package
-	game := poker.NewTexasHoldem(BlindAlerterFunc(StdOutAlerter), store)
+	game := poker.NewTexasHoldem(poker.BlindAlerterFunc(StdOutAlerter), store)
 
 	cli := poker.NewCLI(os.Stdin, os.Stdout, game)
 	cli.PlayPoker()
