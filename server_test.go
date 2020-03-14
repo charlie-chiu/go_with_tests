@@ -43,23 +43,6 @@ func TestGetGame(t *testing.T) {
 	})
 }
 
-func writeWSMessage(t *testing.T, conn *websocket.Conn, message string) {
-	t.Helper()
-	err := conn.WriteMessage(websocket.TextMessage, []byte(message))
-	if err != nil {
-		t.Fatalf("could not send message over ws connetcion %v", err)
-	}
-}
-
-func mustDialWS(t *testing.T, url string) *websocket.Conn {
-	t.Helper()
-	ws, _, err := websocket.DefaultDialer.Dial(url, nil)
-	if err != nil {
-		t.Fatalf("could not open a ws connection on %s %v", url, err)
-	}
-	return ws
-}
-
 func TestGETPlayers(t *testing.T) {
 	store := StubPlayerStore{score: map[string]int{
 		"Pepper": 20,
@@ -222,4 +205,21 @@ func mustMakePlayerServer(t *testing.T, store PlayerStore) *PlayerServer {
 		t.Fatalf("problem creating player server %v", err)
 	}
 	return server
+}
+
+func writeWSMessage(t *testing.T, conn *websocket.Conn, message string) {
+	t.Helper()
+	err := conn.WriteMessage(websocket.TextMessage, []byte(message))
+	if err != nil {
+		t.Fatalf("could not send message over ws connetcion %v", err)
+	}
+}
+
+func mustDialWS(t *testing.T, url string) *websocket.Conn {
+	t.Helper()
+	ws, _, err := websocket.DefaultDialer.Dial(url, nil)
+	if err != nil {
+		t.Fatalf("could not open a ws connection on %s %v", url, err)
+	}
+	return ws
 }

@@ -118,30 +118,6 @@ func TestCLI(t *testing.T) {
 	})
 }
 
-func assertFinishCalledWith(t *testing.T, game *GameSpy, winner string) {
-	t.Helper()
-	got := game.FinishedWith
-	if got != winner {
-		t.Errorf("expected %q wins, got %q", winner, got)
-	}
-}
-
-func assertGameStartWith(t *testing.T, game *GameSpy, numberOfPlayer int) {
-	t.Helper()
-	if game.StartedWith != numberOfPlayer {
-		t.Errorf("want Start Called with 6 but got %d", game.StartedWith)
-	}
-}
-
-func assertMessagesSentToUser(t *testing.T, stdout *bytes.Buffer, messages ...string) {
-	t.Helper()
-	want := strings.Join(messages, "")
-	got := stdout.String()
-	if got != want {
-		t.Errorf("got %q sent to stdout but expected %+v", got, messages)
-	}
-}
-
 func TestGame_Start(t *testing.T) {
 	t.Run("schedules alerts on game start for 5 players", func(t *testing.T) {
 		blindAlerter := &SpyBlindAlerter{}
@@ -213,6 +189,30 @@ func TestGame_Finish(t *testing.T) {
 
 	// assert
 	poker.AssertPlayerWin(t, store, "Charlie")
+}
+
+func assertFinishCalledWith(t *testing.T, game *GameSpy, winner string) {
+	t.Helper()
+	got := game.FinishedWith
+	if got != winner {
+		t.Errorf("expected %q wins, got %q", winner, got)
+	}
+}
+
+func assertGameStartWith(t *testing.T, game *GameSpy, numberOfPlayer int) {
+	t.Helper()
+	if game.StartedWith != numberOfPlayer {
+		t.Errorf("want Start Called with 6 but got %d", game.StartedWith)
+	}
+}
+
+func assertMessagesSentToUser(t *testing.T, stdout *bytes.Buffer, messages ...string) {
+	t.Helper()
+	want := strings.Join(messages, "")
+	got := stdout.String()
+	if got != want {
+		t.Errorf("got %q sent to stdout but expected %+v", got, messages)
+	}
 }
 
 func assertScheduleAlert(t *testing.T, got, want scheduledAlert) {
