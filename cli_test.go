@@ -176,7 +176,7 @@ func TestGame_Finish(t *testing.T) {
 
 func assertFinishCalledWith(t *testing.T, game *poker.GameSpy, winner string) {
 	t.Helper()
-	got := game.FinishedWith
+	got := game.FinishCalledWith
 	if got != winner {
 		t.Errorf("expected %q wins, got %q", winner, got)
 	}
@@ -184,8 +184,8 @@ func assertFinishCalledWith(t *testing.T, game *poker.GameSpy, winner string) {
 
 func assertGameStartWith(t *testing.T, game *poker.GameSpy, numberOfPlayer int) {
 	t.Helper()
-	if game.StartedWith != numberOfPlayer {
-		t.Errorf("want Start Called with 6 but got %d", game.StartedWith)
+	if game.StartCalledWith != numberOfPlayer {
+		t.Errorf("want Start Called with 6 but got %d", game.StartCalledWith)
 	}
 }
 

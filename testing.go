@@ -8,19 +8,22 @@ import (
 )
 
 type GameSpy struct {
-	StartedWith  int
-	FinishedWith string
-	StartCalled  bool
-	FinishCalled bool
+	StartCalled     bool
+	StartCalledWith int
+	BlindAlert      []byte
+
+	FinishCalled     bool
+	FinishCalledWith string
 }
 
 func (g *GameSpy) Start(numberOfPlayers int, alertsDestination io.Writer) {
 	g.StartCalled = true
-	g.StartedWith = numberOfPlayers
+	g.StartCalledWith = numberOfPlayers
+	alertsDestination.Write(g.BlindAlert)
 }
 func (g *GameSpy) Finish(winner string) {
 	g.FinishCalled = true
-	g.FinishedWith = winner
+	g.FinishCalledWith = winner
 }
 
 type StubPlayerStore struct {
