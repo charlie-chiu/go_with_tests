@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
+	"io/ioutil"
 	"net/http"
+	"strconv"
 	"text/template"
 )
 
@@ -31,11 +33,12 @@ type PlayerServer struct {
 	http.Handler
 
 	template *template.Template
+	game     Game
 }
 
 const htmlTemplatePath = "game.html"
 
-func NewPlayerServer(store PlayerStore) (*PlayerServer, error) {
+func NewPlayerServer(store PlayerStore, game Game) (*PlayerServer, error) {
 	p := new(PlayerServer)
 
 	tmpl, err := template.ParseFiles(htmlTemplatePath)
@@ -45,6 +48,7 @@ func NewPlayerServer(store PlayerStore) (*PlayerServer, error) {
 
 	p.store = store
 	p.template = tmpl
+	p.game = game
 
 	router := http.NewServeMux()
 	router.Handle("/ws", http.HandlerFunc(p.webSocket))
@@ -59,8 +63,13 @@ func NewPlayerServer(store PlayerStore) (*PlayerServer, error) {
 
 func (p *PlayerServer) webSocket(w http.ResponseWriter, r *http.Request) {
 	conn, _ := wsUpgrader.Upgrade(w, r, nil)
+
+	_, numberOfPlayerMsg, _ := conn.ReadMessage()
+	numberOfPlayers, _ := strconv.Atoi(string(numberOfPlayerMsg))
+	p.game.Start(numberOfPlayers, ioutil.Discard) //todo: Don't discard the blinds messages!
+
 	_, winnerMsg, _ := conn.ReadMessage()
-	p.store.RecordWin(string(winnerMsg))
+	p.game.Finish(string(winnerMsg))
 }
 
 func (p *PlayerServer) gameHandler(w http.ResponseWriter, r *http.Request) {

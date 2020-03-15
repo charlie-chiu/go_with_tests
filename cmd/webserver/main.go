@@ -1,12 +1,21 @@
 package main
 
 import (
+	"fmt"
 	poker "github.com/charlie-chiu/go_with_test"
+	"io"
 	"log"
 	"net/http"
+	"time"
 )
 
 const dbFileName = "game.db.json"
+
+func Alerter(duration time.Duration, amount int, to io.Writer) {
+	time.AfterFunc(duration, func() {
+		fmt.Fprintf(to, "Blind is now %d\n", amount)
+	})
+}
 
 func main() {
 	store, closeFunc, err := poker.FileSystemPlayerStoreFromFile(dbFileName)
@@ -15,7 +24,8 @@ func main() {
 	}
 	defer closeFunc()
 
-	server, err := poker.NewPlayerServer(store)
+	game := poker.NewTexasHoldem(poker.BlindAlerterFunc(Alerter), store)
+	server, err := poker.NewPlayerServer(store, game)
 	if err != nil {
 		log.Fatalf("could not create new server %v", err)
 	}
