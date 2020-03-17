@@ -18,7 +18,7 @@ type CLI struct {
 	game Game
 }
 
-//just like constructor in php?
+//just like constructor in php.
 func NewCLI(in io.Reader, out io.Writer, game Game) *CLI {
 	return &CLI{
 		in:   bufio.NewScanner(in),
@@ -32,6 +32,7 @@ func (cli *CLI) PlayPoker() {
 
 	numberOfPlayerInput := cli.readLine()
 	numberOfPlayers, err := strconv.Atoi(numberOfPlayerInput)
+	//todo: keep running until user pass correct input
 	if err != nil {
 		fmt.Fprint(cli.out, BadPlayerInputErrorMsg)
 		return
@@ -40,6 +41,7 @@ func (cli *CLI) PlayPoker() {
 
 	winnerInput := cli.readLine()
 	winner, err := extractWinner(winnerInput)
+	//todo: keep running until user pass correct input
 	if err != nil {
 		fmt.Fprint(cli.out, BadWinnerInputErrorMsg)
 		return

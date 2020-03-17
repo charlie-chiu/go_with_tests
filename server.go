@@ -69,6 +69,11 @@ func (p *PlayerServer) gameHandler(w http.ResponseWriter, r *http.Request) {
 	p.template.Execute(w, nil)
 }
 
+func (p *PlayerServer) leagueHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("content-type", "application/json")
+	json.NewEncoder(w).Encode(p.store.GetLeague())
+}
+
 func (p *PlayerServer) playersHandler(w http.ResponseWriter, r *http.Request) {
 	//player := strings.TrimPrefix(r.URL.Path, "/players/")
 	player := r.URL.Path[len("/players/"):]
@@ -79,11 +84,6 @@ func (p *PlayerServer) playersHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		p.showScore(w, player)
 	}
-}
-
-func (p *PlayerServer) leagueHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("content-type", "application/json")
-	json.NewEncoder(w).Encode(p.store.GetLeague())
 }
 
 func (p *PlayerServer) showScore(w http.ResponseWriter, player string) {

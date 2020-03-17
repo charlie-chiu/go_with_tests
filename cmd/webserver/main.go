@@ -2,14 +2,17 @@ package main
 
 import (
 	"fmt"
-	poker "github.com/charlie-chiu/go_with_test"
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"time"
+
+	poker "github.com/charlie-chiu/go_with_test"
 )
 
 const dbFileName = "game.db.json"
+const port = 5000
 
 func Alerter(duration time.Duration, amount int, to io.Writer) {
 	time.AfterFunc(duration, func() {
@@ -30,7 +33,8 @@ func main() {
 		log.Fatalf("could not create new server %v", err)
 	}
 
-	if err := http.ListenAndServe(":5000", server); err != nil {
+	fmt.Fprintf(os.Stdout, "start listen on port %d", port)
+	if err := http.ListenAndServe(fmt.Sprintf(":%d", port), server); err != nil {
 		log.Fatalf("could not listen on port 5000 %v", err)
 	}
 }
