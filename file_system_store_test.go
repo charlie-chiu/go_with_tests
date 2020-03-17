@@ -1,10 +1,13 @@
-package poker
+package poker_test
 
 import (
 	"io/ioutil"
 	"log"
 	"os"
+	"reflect"
 	"testing"
+
+	poker "github.com/charlie-chiu/go_with_test"
 )
 
 func TestFileSystemStore(t *testing.T) {
@@ -14,13 +17,13 @@ func TestFileSystemStore(t *testing.T) {
 		{"Name": "Charlie", "Wins": 999}]`)
 		defer cleanDatabase()
 
-		store, err := NewFileSystemPlayerStore(database)
+		store, err := poker.NewFileSystemPlayerStore(database)
 		if err != nil {
 			log.Fatalf("problem creating file system player store, %v", err)
 		}
 		got := store.GetLeague()
 
-		want := []Player{
+		want := poker.League{
 			{"Charlie", 999},
 			{"Cleo", 10},
 		}
@@ -36,9 +39,9 @@ func TestFileSystemStore(t *testing.T) {
 		{"Name": "Charlie", "Wins": 999}]`)
 		defer cleanDatabase()
 
-		store, err := NewFileSystemPlayerStore(database)
+		store, err := poker.NewFileSystemPlayerStore(database)
 		if err != nil {
-			log.Fatalf("problem creating file system player store, %v", err)
+			log.Fatalf("problem creating File system player store, %v", err)
 		}
 		got := store.GetPlayerScore("Charlie")
 		want := 999
@@ -51,9 +54,9 @@ func TestFileSystemStore(t *testing.T) {
 		{"Name": "Charlie", "Wins": 999}]`)
 		defer cleanDatabase()
 
-		store, err := NewFileSystemPlayerStore(database)
+		store, err := poker.NewFileSystemPlayerStore(database)
 		if err != nil {
-			log.Fatalf("problem creating file system player store, %v", err)
+			log.Fatalf("problem creating File system player store, %v", err)
 		}
 
 		store.RecordWin("Cleo")
@@ -68,7 +71,7 @@ func TestFileSystemStore(t *testing.T) {
 		{"Name": "Charlie", "Wins": 999}]`)
 		defer cleanDatabase()
 
-		store, err := NewFileSystemPlayerStore(database)
+		store, err := poker.NewFileSystemPlayerStore(database)
 		if err != nil {
 			log.Fatalf("problem creating file system player store, %v", err)
 		}
@@ -83,7 +86,7 @@ func TestFileSystemStore(t *testing.T) {
 		database, cleanDatabase := createTempFile(t, "")
 		defer cleanDatabase()
 
-		_, err := NewFileSystemPlayerStore(database)
+		_, err := poker.NewFileSystemPlayerStore(database)
 
 		AssertNoError(t, err)
 	})
@@ -92,9 +95,9 @@ func TestFileSystemStore(t *testing.T) {
 		{"Name": "Cleo", "Wins": 10},	
 		{"Name": "Charlie", "Wins": 999}]`)
 		defer cleanDatabase()
-		store, _ := NewFileSystemPlayerStore(file)
+		store, _ := poker.NewFileSystemPlayerStore(file)
 		got := store.GetLeague()
-		want := League{
+		want := poker.League{
 			{"Charlie", 999},
 			{"Cleo", 10},
 		}
@@ -121,4 +124,24 @@ func createTempFile(t *testing.T, initialData string) (*os.File, func()) {
 	}
 
 	return tempFile, removeFile
+}
+
+func AssertLeague(t *testing.T, got, want poker.League) {
+	t.Helper()
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got %v want %v", got, want)
+	}
+}
+
+func AssertScoreEquals(t *testing.T, got, want int) {
+	t.Helper()
+	if got != want {
+		t.Errorf("Got %d want %d", got, want)
+	}
+}
+
+func AssertNoError(t *testing.T, err error) {
+	if err != nil {
+		t.Errorf("didn't expect an error but got one, %v", err)
+	}
 }
