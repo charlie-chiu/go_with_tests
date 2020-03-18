@@ -27,11 +27,11 @@ func TestFileSystemStore(t *testing.T) {
 			{"Charlie", 999},
 			{"Cleo", 10},
 		}
-		AssertLeague(t, got, want)
+		assertLeague(t, got, want)
 
 		//read again
 		got = store.GetLeague()
-		AssertLeague(t, got, want)
+		assertLeague(t, got, want)
 	})
 	t.Run("get player score", func(t *testing.T) {
 		database, cleanDatabase := createTempFile(t, `[
@@ -102,7 +102,7 @@ func TestFileSystemStore(t *testing.T) {
 			{"Cleo", 10},
 		}
 
-		AssertLeague(t, got, want)
+		assertLeague(t, got, want)
 	})
 
 }
@@ -126,7 +126,7 @@ func createTempFile(t *testing.T, initialData string) (*os.File, func()) {
 	return tempFile, removeFile
 }
 
-func AssertLeague(t *testing.T, got, want poker.League) {
+func assertLeague(t *testing.T, got, want poker.League) {
 	t.Helper()
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("got %v want %v", got, want)

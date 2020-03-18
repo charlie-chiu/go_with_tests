@@ -44,6 +44,40 @@ func TestWebSocket(t *testing.T) {
 	})
 }
 
+func writeWSMessage(t *testing.T, conn *websocket.Conn, message string) {
+	t.Helper()
+	err := conn.WriteMessage(websocket.TextMessage, []byte(message))
+	if err != nil {
+		t.Fatalf("could not send message over ws connetcion %v", err)
+	}
+}
+
+func mustDialWS(t *testing.T, url string) *websocket.Conn {
+	t.Helper()
+	ws, _, err := websocket.DefaultDialer.Dial(url, nil)
+	if err != nil {
+		t.Fatalf("could not open a ws connection on %s %v", url, err)
+	}
+	return ws
+}
+
+func within(t *testing.T, d time.Duration, assert func()) {
+	t.Helper()
+
+	done := make(chan struct{}, 1)
+
+	go func() {
+		assert()
+		done <- struct{}{}
+	}()
+
+	select {
+	case <-time.After(d):
+		t.Error("timed out")
+	case <-done:
+	}
+}
+
 func assertFinishCalledWith(t *testing.T, game *GameSpy, winner string) {
 	t.Helper()
 
@@ -96,7 +130,7 @@ func TestGetGame(t *testing.T) {
 
 		server.ServeHTTP(response, request)
 
-		AssertStatus(t, response.Code, http.StatusOK)
+		assertStatus(t, response.Code, http.StatusOK)
 	})
 }
 
@@ -113,8 +147,8 @@ func TestGETPlayers(t *testing.T) {
 
 		server.ServeHTTP(response, request)
 
-		AssertResponseBody(t, response.Body.String(), "20")
-		AssertStatus(t, response.Code, http.StatusOK)
+		assertResponseBody(t, response.Body.String(), "20")
+		assertStatus(t, response.Code, http.StatusOK)
 	})
 
 	t.Run("returns Floyd's score", func(t *testing.T) {
@@ -123,8 +157,8 @@ func TestGETPlayers(t *testing.T) {
 
 		server.ServeHTTP(response, request)
 
-		AssertResponseBody(t, response.Body.String(), "10")
-		AssertStatus(t, response.Code, http.StatusOK)
+		assertResponseBody(t, response.Body.String(), "10")
+		assertStatus(t, response.Code, http.StatusOK)
 	})
 
 	t.Run("returns 404 on missing players", func(t *testing.T) {
@@ -133,24 +167,23 @@ func TestGETPlayers(t *testing.T) {
 
 		server.ServeHTTP(response, request)
 
-		AssertStatus(t, response.Code, http.StatusNotFound)
+		assertStatus(t, response.Code, http.StatusNotFound)
 	})
 }
 
 func TestPOST(t *testing.T) {
-	store := poker.StubPlayerStore{
-		Score: map[string]int{},
-	}
-	server := mustMakePlayerServer(t, &store, dummyGame)
-
 	t.Run("record win player on POST", func(t *testing.T) {
+		store := poker.StubPlayerStore{
+			Score: map[string]int{},
+		}
+		server := mustMakePlayerServer(t, &store, dummyGame)
 		player := "Pepper"
 		request := newPostWinRequest(player)
 		response := httptest.NewRecorder()
 
 		server.ServeHTTP(response, request)
 
-		AssertStatus(t, response.Code, http.StatusAccepted)
+		assertStatus(t, response.Code, http.StatusAccepted)
 
 		if len(store.WinCalls) != 1 {
 			t.Errorf("got %d calls to RecordWin want %d", len(store.WinCalls), 1)
@@ -167,10 +200,9 @@ func TestRecordingWinsAndRetrievingThem(t *testing.T) {
 	//store := InMemoryPlayerStore{store: map[string]int{}}
 
 	// run test by using FileSystemPlayerStore
-	database, cleanDB := createTempFile(t, "[]")
+	dbFile, cleanDB := createTempFile(t, "[]")
 	defer cleanDB()
-	//store := FileSystemPlayerStore{database}
-	store, err := poker.NewFileSystemPlayerStore(database)
+	store, err := poker.NewFileSystemPlayerStore(dbFile)
 	if err != nil {
 		log.Fatalf("problem creating file system player store, %v", err)
 	}
@@ -185,19 +217,19 @@ func TestRecordingWinsAndRetrievingThem(t *testing.T) {
 	t.Run("get score", func(t *testing.T) {
 		response := httptest.NewRecorder()
 		server.ServeHTTP(response, newGetScoreRequest(player))
-		AssertStatus(t, response.Code, http.StatusOK)
-		AssertResponseBody(t, response.Body.String(), "3")
+		assertStatus(t, response.Code, http.StatusOK)
+		assertResponseBody(t, response.Body.String(), "3")
 	})
 
 	t.Run("get league", func(t *testing.T) {
 		response := httptest.NewRecorder()
 		server.ServeHTTP(response, newLeagueRequest())
-		AssertStatus(t, response.Code, http.StatusOK)
+		assertStatus(t, response.Code, http.StatusOK)
 		got := getLeagueFromResponse(t, response.Body)
 		want := poker.League{
 			{"charlie", 3},
 		}
-		AssertLeague(t, got, want)
+		assertLeague(t, got, want)
 	})
 
 }
@@ -209,7 +241,7 @@ func TestLeague(t *testing.T) {
 			{"Charlie", 20},
 			{"Toby", 14},
 		}
-		store := poker.StubPlayerStore{nil, nil, wantedLeague}
+		store := poker.StubPlayerStore{League: wantedLeague}
 		server := mustMakePlayerServer(t, &store, dummyGame)
 
 		request := newLeagueRequest()
@@ -219,9 +251,9 @@ func TestLeague(t *testing.T) {
 
 		got := getLeagueFromResponse(t, response.Body)
 
-		AssertStatus(t, response.Code, http.StatusOK)
-		AssertLeague(t, got, wantedLeague)
-		AssertContentType(t, response, "application/json")
+		assertStatus(t, response.Code, http.StatusOK)
+		assertLeague(t, got, wantedLeague)
+		assertContentType(t, response, "application/json")
 	})
 }
 
@@ -264,41 +296,7 @@ func mustMakePlayerServer(t *testing.T, store poker.PlayerStore, game poker.Game
 	return server
 }
 
-func writeWSMessage(t *testing.T, conn *websocket.Conn, message string) {
-	t.Helper()
-	err := conn.WriteMessage(websocket.TextMessage, []byte(message))
-	if err != nil {
-		t.Fatalf("could not send message over ws connetcion %v", err)
-	}
-}
-
-func mustDialWS(t *testing.T, url string) *websocket.Conn {
-	t.Helper()
-	ws, _, err := websocket.DefaultDialer.Dial(url, nil)
-	if err != nil {
-		t.Fatalf("could not open a ws connection on %s %v", url, err)
-	}
-	return ws
-}
-
-func within(t *testing.T, d time.Duration, assert func()) {
-	t.Helper()
-
-	done := make(chan struct{}, 1)
-
-	go func() {
-		assert()
-		done <- struct{}{}
-	}()
-
-	select {
-	case <-time.After(d):
-		t.Error("timed out")
-	case <-done:
-	}
-}
-
-func AssertContentType(t *testing.T, response *httptest.ResponseRecorder, want string) {
+func assertContentType(t *testing.T, response *httptest.ResponseRecorder, want string) {
 	t.Helper()
 	contentType := response.Result().Header.Get("content-type")
 	if contentType != want {
@@ -306,14 +304,14 @@ func AssertContentType(t *testing.T, response *httptest.ResponseRecorder, want s
 	}
 }
 
-func AssertStatus(t *testing.T, got, want int) {
+func assertStatus(t *testing.T, got, want int) {
 	t.Helper()
 	if got != want {
 		t.Errorf("got status %d, want %d", got, want)
 	}
 }
 
-func AssertResponseBody(t *testing.T, got, want string) {
+func assertResponseBody(t *testing.T, got, want string) {
 	t.Helper()
 	if got != want {
 		t.Errorf("got %q, want %q", got, want)
