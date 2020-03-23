@@ -15,16 +15,6 @@ type playerServerWS struct {
 	*websocket.Conn
 }
 
-func (w *playerServerWS) Write(p []byte) (n int, err error) {
-	err = w.WriteMessage(1, p)
-
-	if err != nil {
-		return 0, err
-	}
-
-	return len(p), nil
-}
-
 func newPlayerServerWS(w http.ResponseWriter, r *http.Request) *playerServerWS {
 	conn, err := wsUpgrader.Upgrade(w, r, nil)
 
@@ -36,11 +26,21 @@ func newPlayerServerWS(w http.ResponseWriter, r *http.Request) *playerServerWS {
 }
 
 func (w *playerServerWS) WaitForMsg() string {
-	_, msg, err := w.ReadMessage()
-
+	messageType, message, err := w.ReadMessage()
 	if err != nil {
 		log.Printf("error reading from websocket %v\n", err)
 	}
+	log.Printf("WS message Type: %d / Content: %s\n", messageType, message)
 
-	return string(msg)
+	return string(message)
+}
+
+func (w *playerServerWS) Write(p []byte) (n int, err error) {
+	err = w.WriteMessage(1, p)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return len(p), nil
 }
