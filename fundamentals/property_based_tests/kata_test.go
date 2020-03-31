@@ -4,10 +4,11 @@ import (
 	"fmt"
 	kata "github.com/charlie-chiu/go_with_test/fundamentals/property_based_tests"
 	"testing"
+	"testing/quick"
 )
 
 var cases = []struct {
-	Arabic int
+	Arabic uint16
 	Roman  string
 }{
 	{1, "I"},
@@ -62,5 +63,29 @@ func TestConvertToArabic(t *testing.T) {
 				t.Errorf("got %d want %d", got, test.Arabic)
 			}
 		})
+	}
+}
+
+func TestPropertiesOfConversion(t *testing.T) {
+	assertion := func(arabic uint16) bool {
+		if arabic > 3999 {
+			// how to do this?
+			// generate arabic within 1 ~ 3999
+			// or return an error when out of range ?
+			return true
+		}
+		t.Log("testing", arabic)
+		roman := kata.PrintInRoman(arabic)
+		fromRoman := kata.ConvertToArabic(roman)
+		return fromRoman == arabic
+	}
+
+	config := &quick.Config{
+		MaxCount: 100,
+		Values:   nil,
+	}
+
+	if err := quick.Check(assertion, config); err != nil {
+		t.Error("failed checks", err)
 	}
 }
