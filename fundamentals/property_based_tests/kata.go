@@ -4,12 +4,59 @@ import (
 	"strings"
 )
 
+func PrintInRoman(arabic int) string {
+	var result strings.Builder
+
+	for _, n := range allRomanNumerals {
+		for arabic >= n.value {
+			result.WriteString(n.symbol)
+			arabic -= n.value
+		}
+	}
+
+	return result.String()
+}
+
+func ConvertToArabic(roman string) (total int) {
+	for _, symbols := range windowedRoman(roman).Symbols() {
+		total += allRomanNumerals.ValueOf(symbols...)
+	}
+
+	return total
+}
+
 type RomanNumeral struct {
 	value  int
 	symbol string
 }
 
-var allRomanNumerals = []RomanNumeral{
+type RomanNumerals []RomanNumeral
+
+func (r RomanNumerals) ValueOf(symbols ...byte) int {
+	symbol := string(symbols)
+
+	for _, s := range r {
+		if s.symbol == symbol {
+			return s.value
+		}
+	}
+
+	return 0
+}
+
+func (r RomanNumerals) Exists(symbols ...byte) bool {
+	symbol := string(symbols)
+
+	for _, s := range r {
+		if s.symbol == symbol {
+			return true
+		}
+	}
+
+	return false
+}
+
+var allRomanNumerals = RomanNumerals{
 	{1000, "M"},
 	{900, "CM"},
 	{500, "D"},
@@ -25,15 +72,25 @@ var allRomanNumerals = []RomanNumeral{
 	{1, "I"},
 }
 
-func PrintInRoman(arabic int) string {
-	var result strings.Builder
+type windowedRoman string
 
-	for _, n := range allRomanNumerals {
-		for arabic >= n.value {
-			result.WriteString(n.symbol)
-			arabic -= n.value
+func (w windowedRoman) Symbols() (symbols [][]byte) {
+	for i := 0; i < len(w); i++ {
+		symbol := w[i]
+		notAtEnd := i+1 < len(w)
+
+		if notAtEnd && isSubtractive(symbol) && allRomanNumerals.Exists(symbol, w[i+1]) {
+			symbols = append(symbols, []byte{byte(symbol), byte(w[i+1])})
+			i++
+		} else {
+			symbols = append(symbols, []byte{symbol})
 		}
 	}
 
-	return result.String()
+	return
+}
+
+// todo: discover why uint8 == 'I' ???
+func isSubtractive(symbol uint8) bool {
+	return symbol == 'I' || symbol == 'X' || symbol == 'C'
 }
