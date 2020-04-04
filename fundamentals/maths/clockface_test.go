@@ -1,10 +1,45 @@
 package clockface
 
 import (
+	"bytes"
+	"encoding/xml"
 	"math"
 	"testing"
 	"time"
 )
+
+func TestSVGWriterSecondHand(t *testing.T) {
+	cases := []struct {
+		time time.Time
+		line Line
+	}{
+		{simpleTime(0, 0, 0), Line{X1: 150, Y1: 150, X2: 150, Y2: 60}},
+		{simpleTime(0, 0, 30), Line{X1: 150, Y1: 150, X2: 150, Y2: 240}},
+	}
+
+	for _, c := range cases {
+		t.Run(testName(c.time), func(t *testing.T) {
+			b := bytes.Buffer{}
+			SVGWriter(&b, c.time)
+			svg := SVG{}
+			xml.Unmarshal(b.Bytes(), &svg)
+
+			if !containsLine(c.line, svg.Line) {
+				t.Errorf("expected to find the second hand line %+v, in the SVG lines %+v", c.line, svg.Line)
+			}
+		})
+	}
+}
+
+func containsLine(needle Line, haystack []Line) bool {
+	for _, line := range haystack {
+		if line == needle {
+			return true
+		}
+	}
+
+	return false
+}
 
 func TestSecondHandInRadians(t *testing.T) {
 	cases := []struct {
