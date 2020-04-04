@@ -8,6 +8,69 @@ import (
 	"time"
 )
 
+func TestSVGWriterHourHand(t *testing.T) {
+	cases := []struct {
+		time time.Time
+		line Line
+	}{
+		{simpleTime(6, 0, 0), Line{X1: 150, Y1: 150, X2: 150, Y2: 200}},
+	}
+
+	for _, c := range cases {
+		t.Run(testName(c.time), func(t *testing.T) {
+			b := bytes.Buffer{}
+			SVGWriter(&b, c.time)
+			svg := SVG{}
+			xml.Unmarshal(b.Bytes(), &svg)
+
+			if !containsLine(c.line, svg.Line) {
+				t.Errorf("expected to find the hour hand line %+v, in the SVG lines %+v", c.line, svg.Line)
+			}
+		})
+	}
+}
+
+func TestHourHandPoint(t *testing.T) {
+	cases := []struct {
+		time  time.Time
+		point Point
+	}{
+		{simpleTime(6, 0, 0), Point{0, -1}},
+		{simpleTime(12, 0, 0), Point{0, 1}},
+		{simpleTime(21, 0, 0), Point{-1, 0}},
+	}
+
+	for _, c := range cases {
+		t.Run(testName(c.time), func(t *testing.T) {
+			got := hourHandPoint(c.time)
+			if !roughlyEqualPoint(c.point, got) {
+				t.Errorf("wanted %v point got %v", c.point, got)
+			}
+		})
+	}
+}
+
+func TestHourHandInRadians(t *testing.T) {
+	cases := []struct {
+		t     time.Time
+		angle float64
+	}{
+		{simpleTime(0, 0, 0), 0},
+		{simpleTime(6, 0, 0), math.Pi},
+		{simpleTime(21, 0, 0), math.Pi * 1.5},
+		{simpleTime(0, 1, 30), math.Pi / ((6 * 60 * 60) / 90)},
+	}
+
+	for _, c := range cases {
+		t.Run(testName(c.t), func(t *testing.T) {
+			got := hourHandInRadians(c.t)
+			if !roughlyEqualFloat64(got, c.angle) {
+				t.Errorf("Wanted %v radians, got %v", c.angle, got)
+			}
+		})
+	}
+}
+
 func TestSVGWriterMinuteHand(t *testing.T) {
 	cases := []struct {
 		time time.Time
@@ -66,7 +129,7 @@ func TestMinuteHandInRadians(t *testing.T) {
 	for _, c := range cases {
 		t.Run(testName(c.t), func(t *testing.T) {
 			got := minutesInRadians(c.t)
-			if got != c.angle {
+			if !roughlyEqualFloat64(got, c.angle) {
 				t.Errorf("Wanted %v radians, got %v", c.angle, got)
 			}
 		})
@@ -96,37 +159,6 @@ func TestSVGWriterSecondHand(t *testing.T) {
 	}
 }
 
-func containsLine(needle Line, haystack []Line) bool {
-	for _, line := range haystack {
-		if line == needle {
-			return true
-		}
-	}
-
-	return false
-}
-
-func TestSecondHandInRadians(t *testing.T) {
-	cases := []struct {
-		t     time.Time
-		angle float64
-	}{
-		{simpleTime(0, 0, 30), math.Pi},
-		{simpleTime(0, 0, 0), 0},
-		{simpleTime(0, 0, 45), (math.Pi / 2) * 3},
-		{simpleTime(0, 0, 7), (math.Pi / 30) * 7},
-	}
-
-	for _, c := range cases {
-		t.Run(testName(c.t), func(t *testing.T) {
-			got := secondsInRadians(c.t)
-			if got != c.angle {
-				t.Errorf("Wanted %v radians, got %v", c.angle, got)
-			}
-		})
-	}
-}
-
 func TestSecondHandPoint(t *testing.T) {
 	cases := []struct {
 		time  time.Time
@@ -144,6 +176,37 @@ func TestSecondHandPoint(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestSecondHandInRadians(t *testing.T) {
+	cases := []struct {
+		t     time.Time
+		angle float64
+	}{
+		{simpleTime(0, 0, 30), math.Pi},
+		{simpleTime(0, 0, 0), 0},
+		{simpleTime(0, 0, 45), (math.Pi / 2) * 3},
+		{simpleTime(0, 0, 7), (math.Pi / 30) * 7},
+	}
+
+	for _, c := range cases {
+		t.Run(testName(c.t), func(t *testing.T) {
+			got := secondsInRadians(c.t)
+			if !roughlyEqualFloat64(got, c.angle) {
+				t.Errorf("Wanted %v radians, got %v", c.angle, got)
+			}
+		})
+	}
+}
+
+func containsLine(needle Line, haystack []Line) bool {
+	for _, line := range haystack {
+		if line == needle {
+			return true
+		}
+	}
+
+	return false
 }
 
 func simpleTime(hours, minutes, seconds int) time.Time {
