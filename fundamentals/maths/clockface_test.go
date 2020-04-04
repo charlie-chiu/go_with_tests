@@ -8,6 +8,71 @@ import (
 	"time"
 )
 
+func TestSVGWriterMinuteHand(t *testing.T) {
+	cases := []struct {
+		time time.Time
+		line Line
+	}{
+		{simpleTime(0, 0, 0), Line{X1: 150, Y1: 150, X2: 150, Y2: 70}},
+	}
+
+	for _, c := range cases {
+		t.Run(testName(c.time), func(t *testing.T) {
+			b := bytes.Buffer{}
+			SVGWriter(&b, c.time)
+			svg := SVG{}
+			xml.Unmarshal(b.Bytes(), &svg)
+
+			if !containsLine(c.line, svg.Line) {
+				t.Errorf("expected to find the minute hand line %+v, in the SVG lines %+v", c.line, svg.Line)
+			}
+		})
+	}
+}
+
+func TestMinuteHandPoint(t *testing.T) {
+	cases := []struct {
+		time  time.Time
+		point Point
+	}{
+		{simpleTime(0, 0, 0), Point{0, 1}},
+		{simpleTime(0, 30, 0), Point{0, -1}},
+		{simpleTime(0, 45, 0), Point{-1, 0}},
+	}
+
+	for _, c := range cases {
+		t.Run(testName(c.time), func(t *testing.T) {
+			got := minuteHandPoint(c.time)
+			if !roughlyEqualPoint(c.point, got) {
+				t.Errorf("wanted %v point got %v", c.point, got)
+			}
+		})
+	}
+}
+
+func TestMinuteHandInRadians(t *testing.T) {
+	cases := []struct {
+		t     time.Time
+		angle float64
+	}{
+		{simpleTime(0, 0, 0), 0},
+		{simpleTime(0, 30, 0), math.Pi},
+		{simpleTime(0, 45, 0), (math.Pi / 2) * 3},
+		{simpleTime(0, 41, 0), (math.Pi / 30) * 41},
+		// minute hand should move a little bit every second!
+		{simpleTime(0, 0, 7), 7 * (math.Pi / (30 * 60))},
+	}
+
+	for _, c := range cases {
+		t.Run(testName(c.t), func(t *testing.T) {
+			got := minutesInRadians(c.t)
+			if got != c.angle {
+				t.Errorf("Wanted %v radians, got %v", c.angle, got)
+			}
+		})
+	}
+}
+
 func TestSVGWriterSecondHand(t *testing.T) {
 	cases := []struct {
 		time time.Time
@@ -62,7 +127,7 @@ func TestSecondHandInRadians(t *testing.T) {
 	}
 }
 
-func TestSecondHandVector(t *testing.T) {
+func TestSecondHandPoint(t *testing.T) {
 	cases := []struct {
 		time  time.Time
 		point Point

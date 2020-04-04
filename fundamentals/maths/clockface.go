@@ -36,11 +36,12 @@ type Line struct {
 func SVGWriter(w io.Writer, t time.Time) {
 	io.WriteString(w, svgStart)
 	io.WriteString(w, bezel)
-	secondHandTagWriter(w, SecondHand(t))
+	clockHandWriter(w, SecondHand(t))
+	clockHandWriter(w, MinuteHand(t))
 	io.WriteString(w, svgEnd)
 }
 
-func secondHandTagWriter(w io.Writer, p Point) {
+func clockHandWriter(w io.Writer, p Point) {
 	fmt.Fprintf(w, `<line x1="150" y1="150" x2="%.3f" y2="%.3f" style="fill:none;stroke:#f00;stroke-width:3px;"/>`, p.X, p.Y)
 }
 
@@ -57,6 +58,7 @@ const bezel = `<circle cx="150" cy="150" r="100" style="fill:#fff;stroke:#000;st
 const svgEnd = `</svg>`
 
 const secondHandLength = 90
+const minuteHandLength = 80
 const clockCentreX = 150
 const clockCentreY = 150
 
@@ -66,16 +68,7 @@ type Point struct {
 }
 
 func SecondHand(t time.Time) (p Point) {
-	p = secondHandPoint(t)
-
-	// scale
-	p = Point{X: p.X * secondHandLength, Y: p.Y * secondHandLength}
-	// flip, origin of SVG in the top left hand corner
-	p = Point{X: p.X, Y: -p.Y}
-	// translate
-	p = Point{X: p.X + clockCentreX, Y: p.Y + clockCentreY}
-
-	return
+	return makeHand(secondHandPoint(t), secondHandLength)
 }
 
 func secondsInRadians(t time.Time) float64 {
@@ -83,7 +76,33 @@ func secondsInRadians(t time.Time) float64 {
 }
 
 func secondHandPoint(t time.Time) Point {
-	angle := secondsInRadians(t)
+	return angleToPoint(secondsInRadians(t))
+}
+
+func MinuteHand(t time.Time) (p Point) {
+	return makeHand(minuteHandPoint(t), minuteHandLength)
+}
+
+func makeHand(p Point, length float64) Point {
+	// scale
+	p = Point{X: p.X * length, Y: p.Y * length}
+	// flip, origin of SVG in the top left hand corner
+	p = Point{X: p.X, Y: -p.Y}
+	// translate
+	p = Point{X: p.X + clockCentreX, Y: p.Y + clockCentreY}
+
+	return p
+}
+
+func minutesInRadians(t time.Time) float64 {
+	return math.Pi/(30/float64(t.Minute())) + secondsInRadians(t)/60
+}
+
+func minuteHandPoint(t time.Time) Point {
+	return angleToPoint(minutesInRadians(t))
+}
+
+func angleToPoint(angle float64) Point {
 	x := math.Sin(angle)
 	y := math.Cos(angle)
 
