@@ -141,8 +141,18 @@ func TestSVGWriterSecondHand(t *testing.T) {
 		time time.Time
 		line Line
 	}{
-		{simpleTime(0, 0, 0), Line{X1: 150, Y1: 150, X2: 150, Y2: 60}},
-		{simpleTime(0, 0, 30), Line{X1: 150, Y1: 150, X2: 150, Y2: 240}},
+		{
+			simpleTime(0, 0, 0),
+			Line{X1: clockCentreX, Y1: clockCentreY, X2: clockCentreX, Y2: clockCentreY - secondHandLength},
+		},
+		{
+			simpleTime(0, 0, 15),
+			Line{X1: clockCentreX, Y1: clockCentreY, X2: clockCentreX + secondHandLength, Y2: clockCentreY},
+		},
+		{
+			simpleTime(0, 0, 30),
+			Line{X1: clockCentreX, Y1: clockCentreY, X2: clockCentreX, Y2: clockCentreY + secondHandLength},
+		},
 	}
 
 	for _, c := range cases {
@@ -186,7 +196,7 @@ func TestSecondHandInRadians(t *testing.T) {
 		{simpleTime(0, 0, 30), math.Pi},
 		{simpleTime(0, 0, 0), 0},
 		{simpleTime(0, 0, 45), (math.Pi / 2) * 3},
-		{simpleTime(0, 0, 7), (math.Pi / 30) * 7},
+		{simpleTime(0, 0, 7), (math.Pi / secondsInHalfClock) * 7},
 	}
 
 	for _, c := range cases {
@@ -198,6 +208,8 @@ func TestSecondHandInRadians(t *testing.T) {
 		})
 	}
 }
+
+// helper
 
 func containsLine(needle Line, haystack []Line) bool {
 	for _, line := range haystack {

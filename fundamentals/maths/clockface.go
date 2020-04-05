@@ -66,9 +66,14 @@ const (
 	clockCentreY     = 150
 )
 
-const secondsInHalfClock = 30
-const secondsInClock = 2 * secondsInHalfClock
-const minutesInHalfClock = 30
+const (
+	secondsInHalfClock = 30
+	secondsInClock     = 2 * secondsInHalfClock
+	minutesInHalfClock = 30
+	minutesInClock     = 2 * minutesInHalfClock
+	hoursInHalfClock   = 6
+	hoursInClock       = 2 * hoursInHalfClock
+)
 
 // a point represents a two dimensional Cartesian coordinate
 type Point struct {
@@ -80,38 +85,43 @@ func HourHand(t time.Time) (p Point) {
 }
 
 func hourHandPoint(t time.Time) Point {
-	return angleToPoint(hourHandInRadians(t))
+	return angleToUnitCirclePoint(hourHandInRadians(t))
 }
 
 func hourHandInRadians(t time.Time) float64 {
-	return math.Pi/(6/float64(t.Hour()%12)) + (minutesInRadians(t) / 12)
+	hInClock := float64(t.Hour() % hoursInClock)
+	return math.Pi/(hoursInHalfClock/hInClock) + (minutesInRadians(t) / hoursInClock)
 }
 
 func MinuteHand(t time.Time) (p Point) {
 	return makeHand(minuteHandPoint(t), minuteHandLength)
 }
 
-func minutesInRadians(t time.Time) float64 {
-	return math.Pi/(minutesInHalfClock/float64(t.Minute())) + secondsInRadians(t)/secondsInClock
+func minuteHandPoint(t time.Time) Point {
+	return angleToUnitCirclePoint(minutesInRadians(t))
 }
 
-func minuteHandPoint(t time.Time) Point {
-	return angleToPoint(minutesInRadians(t))
+func minutesInRadians(t time.Time) float64 {
+	return math.Pi/(minutesInHalfClock/float64(t.Minute())) + secondsInRadians(t)/minutesInClock
 }
 
 func SecondHand(t time.Time) (p Point) {
 	return makeHand(secondHandPoint(t), secondHandLength)
 }
 
+func secondHandPoint(t time.Time) Point {
+	return angleToUnitCirclePoint(secondsInRadians(t))
+}
+
 func secondsInRadians(t time.Time) float64 {
+	// this is correct equation, too.
+	// but will got a failed test because float.
+	//return math.Pi * 2 * float64(t.Second()) / secondsInClock
+
 	return math.Pi / (secondsInHalfClock / float64(t.Second()))
 }
 
-func secondHandPoint(t time.Time) Point {
-	return angleToPoint(secondsInRadians(t))
-}
-
-func angleToPoint(angle float64) Point {
+func angleToUnitCirclePoint(angle float64) Point {
 	x := math.Sin(angle)
 	y := math.Cos(angle)
 
